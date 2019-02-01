@@ -9,3 +9,7 @@ export class Feedback {
 }
 
 export const ContactType = ['None', 'Tel', 'Email'];
+
+export const FORM_STATUS_INITIAL = 'initial';
+export const FORM_STATUS_SUBMISSION = 'submission';
+export const FORM_STATUS_SUBMITTED = 'submitted';

@@ -2,8 +2,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { FeedbackService } from '../services/feedback.service';
-import { Feedback, ContactType } from '../shared/feedback';
-import { flyInOut } from '../animations/app.animation';
+import { Feedback, ContactType, FORM_STATUS_INITIAL, FORM_STATUS_SUBMISSION, FORM_STATUS_SUBMITTED } from '../shared/feedback';
+import { flyInOut, expand } from '../animations/app.animation';
 
 @Component({
   selector: 'app-contact',
@@ -15,7 +15,8 @@ import { flyInOut } from '../animations/app.animation';
     'style': 'display: block;'
   },
   animations: [
-    flyInOut()
+    flyInOut(),
+    expand()
   ]
 })
 export class ContactComponent implements OnInit {
@@ -26,6 +27,7 @@ export class ContactComponent implements OnInit {
   feedback: Feedback;
   contactType = ContactType;
   errMess: string;
+  submissionStatus = FORM_STATUS_INITIAL;
 
   formErrors = {
     'firstname': '',
@@ -103,29 +105,55 @@ export class ContactComponent implements OnInit {
   onSubmit() {
     this.feedback = this.feedbackForm.value;
 
-    this.feedbackService.submitFeedback(this.feedback)
-        .subscribe(feedback => {
-              this.feedback = feedback;
-            },
-            errmess => {
-              this.errMess = <any>errmess;
-            }
-        );
-
+    // Need to reset form before changing status, because form disappears when status changed
     this.resetForm();
+
+    this.submissionStatus = FORM_STATUS_SUBMISSION;
+
+    this.feedbackService.submitFeedback(this.feedback)
+      .subscribe(feedback => {
+          this.feedback = feedback;
+          this.afterSubmission();
+        },
+        errmess => {
+          this.errMess = <any>errmess;
+          this.afterSubmission();
+        }
+      );
+  }
+
+  afterSubmission() {
+    this.submissionStatus = FORM_STATUS_SUBMITTED;
+
+    setTimeout(() => {
+      this.submissionStatus = FORM_STATUS_INITIAL;
+    }, 5000);
   }
 
   resetForm() {
     this.feedbackForm.reset({
       firstname: '',
       lastname: '',
-      telnum: '',
+      telnum: null,
       email: '',
       agree: false,
       contacttype: 'None',
       message: ''
     });
+
     this.feedbackFormDirective.resetForm();
+  }
+
+  isInititalForm() {
+    return this.submissionStatus === FORM_STATUS_INITIAL;
+  }
+
+  isFormInProcess() {
+    return this.submissionStatus === FORM_STATUS_SUBMISSION;
+  }
+
+  isFormSubmitted() {
+    return this.submissionStatus === FORM_STATUS_SUBMITTED;
   }
 
 }
